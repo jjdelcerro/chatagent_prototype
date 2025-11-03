@@ -28,4 +28,4 @@ Consideraciones:
 * Las consultas SQL generadas por la IA se limitan a 1000 resultados.
 * Los gráficos se abrirán en ventanas separadas.
 
-¡Esperamos que disfrutes usando la aplicación!
+
