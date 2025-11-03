@@ -8,6 +8,8 @@ con la IA de Gemini, utilizando los distintos procesadores de respuesta.
 import gvsig
 from gvsig.libs.formpanel import FormPanel
 
+import sys
+
 from javax.swing import JPanel, JButton, JTextArea, JScrollPane, JPopupMenu, JMenuItem
 from javax.swing.text import DefaultEditorKit, SimpleAttributeSet, StyleConstants
 from java.awt import BorderLayout, Dimension, Font
@@ -23,13 +25,10 @@ from javax.swing.text import StyledEditorKit
 from java.io import StringReader
 from javax.json import Json
 
-import utils
-import sys
-import utils
+import addons.chatagent_prototype.utils
+import addons.chatagent_prototype.config
 
 from addons.chatagent_prototype.gvsigdesktop.utils import getAvailableDataModels, getDDL, getCurrentViewBboxAsWKT
-
-import config
 
 class ChatPanel(FormPanel, ActionListener):
     """

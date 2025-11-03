@@ -225,23 +225,23 @@ class GeminiClient(AIClient):
                                 if first_part.containsKey("text"):
                                     generated_text = first_part.getString("text")
                                 else:
-                                    print "Advertencia: La parte del contenido no tiene el campo 'text'."
+                                    print u"Advertencia: La parte del contenido no tiene el campo 'text'."
                             else:
-                                print "Advertencia: El array 'parts' del contenido está vacío."
+                                print u"Advertencia: El array 'parts' del contenido está vacío."
                         else:
-                            print "Advertencia: El candidato no tiene el campo 'content'."
+                            print u"Advertencia: El candidato no tiene el campo 'content'."
                     else:
-                        print "Advertencia: El candidato no tiene el campo 'content'."
+                        print u"Advertencia: El candidato no tiene el campo 'content'."
                 else:
-                    print "Advertencia: El array 'candidates' está vacío en la respuesta de la API."
+                    print u"Advertencia: El array 'candidates' está vacío en la respuesta de la API."
             else:
-                print "Advertencia: La respuesta de la API no contiene el campo 'candidates'."
+                print u"Advertencia: La respuesta de la API no contiene el campo 'candidates'."
                 # Si la respuesta contiene un objeto 'error', lo procesamos
                 if response_json.containsKey("error"):
                     error_obj = response_json.getJsonObject("error")
                     error_message = error_obj.getString("message", "Error desconocido del API.")
                     generated_text = u"Error del API: %s" % error_message
-                    print "Error detallado del API: %s" % error_message
+                    print u"Error detallado del API: %s" % error_message
                 else:
                     generated_text = "Error: Estructura de respuesta inesperada del API."
 
@@ -256,12 +256,12 @@ class GeminiClient(AIClient):
 
         except Exception, e:
             # Captura cualquier excepción que ocurra durante el proceso de send_message
-            print("Error general en send_message: %s" % e)
+            print(u"Error general en send_message: %s" % e)
             # Si la llamada falla, se puede considerar eliminar el último user_prompt del historial
             # para evitar que una solicitud fallida "contamine" el historial de la conversación.
             if self.history and self.history[-1]["role"] == "user":
                 self.history.pop() # Elimina el último mensaje del usuario si la respuesta no se pudo obtener
-            return "Error: No se pudo procesar la solicitud o la respuesta del API. Detalles: %s" % e
+            return u"Error: No se pudo procesar la solicitud o la respuesta del API. Detalles: %s" % e
 
 def main(**args):
   print "Ok"

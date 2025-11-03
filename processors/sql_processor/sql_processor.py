@@ -96,8 +96,8 @@ class SqlProcessor(Processor):
               chat_panel.append_message(chat_panel.getAgentName(),(u"%s. %s {component} {component}" % (title,ahora)), button, label)
 
         except Exception as e:
-            chat_panel.append_message(chat_panel.getAgentName(),"uError al procesar la respuesta: %s" % e)
-            print "Error al procesar la respuesta: %s" % e
+            chat_panel.append_message(chat_panel.getAgentName(),u"Error al procesar la respuesta: %s" % e)
+            print u"Error al procesar la respuesta: %s" % e
 
 class AddToToolbarListener(MouseAdapter):
     def __init__(self, executeListener, tooltip):
