@@ -1,0 +1,31 @@
+﻿LEEME.txt - Guía de Usuario para la Aplicación de Chat con Gemini
+
+Bienvenido a la aplicación de Chat con Gemini 2.5. Esta aplicación te permite interactuar con un modelo de IA especializado en consultas relacionadas con bases de datos.
+
+Funcionalidades Principales:
+
+1.  **Conversación General (Tipo "text"):**
+    Puedes hacer cualquier pregunta general a la IA. La IA responderá con un mensaje de texto.
+
+2.  **Consultas SQL (Tipo "sql_processor"):**
+    Describe en lenguaje natural la consulta que deseas realizar sobre las tablas de la base de datos. La IA intentará generar una sentencia SQL (solo SELECT) y te mostrará los resultados en una tabla.
+    Ejemplo: "Muéstrame los nombres y salarios de los empleados del departamento de ventas."
+
+3.  **Generación de Gráficos (Tipo "chart_processor"):**
+    Pide a la IA que genere un gráfico (barras o tartas) utilizando los datos de la base de datos. La IA generará la consulta SQL, el código para el gráfico y te lo presentará en una nueva ventana.
+    Ejemplo: "Haz un gráfico de barras que muestre el número de empleados por departamento."
+
+Cómo Usar:
+
+* **Historial del Chat:** La parte superior de la ventana muestra el historial de tu conversación con la IA.
+* **Entrada del Usuario:** En la parte inferior, escribe tu pregunta o solicitud.
+* **Botón "Enviar":** Haz clic en este botón (o presiona Enter en el área de entrada) para enviar tu mensaje a la IA.
+* **Menús Contextuales:** Puedes hacer clic derecho en las áreas de texto para acceder a las opciones estándar de edición (Cortar, Copiar, Pegar).
+
+Consideraciones:
+
+* La aplicación se comunica con la API de Gemini, por lo que requiere conexión a internet.
+* Las consultas SQL generadas por la IA se limitan a 1000 resultados.
+* Los gráficos se abrirán en ventanas separadas.
+
+¡Esperamos que disfrutes usando la aplicación!

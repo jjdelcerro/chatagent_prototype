@@ -1,0 +1,121 @@
+﻿LEEME_DESA.txt - Documentación para Desarrolladores
+
+Esta documentación describe la estructura y el funcionamiento interno de la aplicación de chat con Gemini 2.5, diseñada para Jython 2.7.1 y Java 1.8.
+
+Estructura de Módulos:
+
+1.  **`main.py`**:
+    * **Propósito:** Punto de entrada principal de la aplicación.
+    * **Función:** Inicializa el `ChatPanel`, registra las instancias de los diferentes `Processor` (Text, SQL, Chart) y muestra la ventana principal del chat.
+    * **Dependencias:** `chat_panel`, `text_processor`, `sql_processor`, `chart_processor`, `utils`.
+
+2.  **`chat_panel.py`**:
+    * **Propósito:** Implementa la interfaz gráfica de usuario principal del chat.
+    * **Clase:** `ChatPanel` (extiende `JPanel`).
+    * **Funcionalidades:**
+        * Carga el diseño de la UI desde `chatpanel.xml.txt` utilizando Abeille Form Designer.
+        * Gestiona el historial de mensajes (`JTextArea`) en la UI.
+        * **No mantiene el historial de mensajes de la API:** La lista `chat_history_messages` ha sido eliminada de esta clase, ya que ahora es gestionada por `GeminiAPI`.
+        * Maneja la entrada del usuario (`JTextArea`) y el botón "Enviar".
+        * Implementa `actionPerformed` para el envío de mensajes.
+        * **Composición del Prompt:** Se encarga de construir el prompt inicial completo (`_build_initial_prompt_string`) y de decidir cuándo pasarlo a la API (solo en la primera interacción).
+        * Utiliza `SwingWorker` (`GeminiApiWorker`) para realizar llamadas a la API de Gemini en segundo plano, evitando bloquear la UI.
+        * Registra y delega el procesamiento de las respuestas de la IA a los `Processor` adecuados.
+        * Proporciona menús contextuales de edición para las áreas de texto.
+    * **Dependencias:** `javax.swing.*`, `java.awt.*`, `java.io.*`, `javax.json.*`, `com.jeta.forms.*`, `gemini_api`, `utils`, `config`.
+
+3.  **`gemini_api.py`**:
+    * **Propósito:** Maneja la comunicación con la API de Gemini.
+    * **Clase:** `GeminiAPI`.
+    * **Método:** `send_message(user_prompt, initial_prompt_text)`:
+        * Recibe el mensaje actual del usuario (`user_prompt`) y el prompt inicial (`initial_prompt_text`) si aplica.
+        * **Gestión del Historial de Conversación:** Esta clase ahora mantiene internamente `self.chat_history_messages`, una lista de objetos JSON en el formato de la API de Gemini (`role`, `parts`).
+        * Construye el payload JSON (`contents` array) para la API de Gemini, incorporando:
+            * El `initial_prompt_text` como el primer mensaje de 'user' si el historial interno está vacío.
+            * El historial de mensajes `self.chat_history_messages` acumulado.
+            * El `user_prompt` actual.
+        * Después de recibir una respuesta exitosa de Gemini, añade tanto el mensaje del `user_prompt` como la respuesta del `model` a su historial interno `self.chat_history_messages` para mantener el contexto.
+        * Realiza la petición HTTP POST utilizando `java.net.HttpURLConnection`.
+        * Parsea la respuesta JSON de la API utilizando `javax.json`.
+    * **Dependencias:** `java.net.*`, `java.io.*`, `javax.json.*`, `config`, `sys`.
+
+4.  **`processor.py`**:
+    * **Propósito:** Define la interfaz abstracta para los procesadores de respuesta de la IA.
+    * **Clase:** `Processor` (abstracta).
+    * **Métodos Abstractos:**
+        * `process_response(chat_panel, json_response)`: Lógica para manejar la respuesta JSON específica de cada tipo.
+        * `get_type()`: Devuelve el identificador del tipo de procesador (e.g., "text", "sql_processor").
+        * `get_initial_prompt_info()`: Devuelve la parte del prompt inicial que describe el formato de respuesta esperado para este procesador.
+        * `get_description()`: Devuelve una breve descripción del procesador.
+    * **Dependencias:** Ninguna específica de la aplicación, solo Jython/Python estándar.
+
+5.  **`text_processor.py`**:
+    * **Propósito:** Implementa el procesador para respuestas de tipo "text".
+    * **Clase:** `TextProcessor` (extiende `Processor`).
+    * **Funcionalidad:** Extrae el campo `message` del JSON y lo muestra en el historial del chat.
+    * **Dependencias:** `processor`.
+
+6.  **`sql_processor.py`**:
+    * **Propósito:** Implementa el procesador para respuestas de tipo "sql_processor".
+    * **Clases:**
+        * `SqlProcessor` (extiende `Processor`):
+            * Extrae el campo `sql` del JSON.
+            * Utiliza `SwingWorker` (`SqlExecutionWorker`) para ejecutar la SQL a través de `utils.executeSQL`.
+            * Maneja errores durante la ejecución SQL.
+            * Muestra los resultados en un `ResultSetTablePanel`.
+        * `ResultSetTableModel` (extiende `AbstractTableModel`): Modelo de datos para `JTable` que se adapta a un `java.sql.ResultSet`.
+        * `ResultSetTablePanel` (extiende `JPanel`): Panel que contiene un `JTable` para mostrar el `ResultSet`.
+    * **Dependencias:** `processor`, `utils`, `javax.swing.*`, `java.awt.*`, `java.lang.*`.
+
+7.  **`chart_processor.py`**:
+    * **Propósito:** Implementa el procesador para respuestas de tipo "chart_processor".
+    * **Clase:** `ChartProcessor` (extiende `Processor`).
+    * **Funcionalidad:**
+        * Extrae `sql`, `result_set_schema` y `jython_chart_function` del JSON.
+        * Utiliza `SwingWorker` (`ChartGenerationWorker`) para:
+            * Ejecutar la SQL a través de `utils.executeSQL`.
+            * Ejecutar dinámicamente el código Jython de la función `generate_chart` (proporcionada por la IA) con el `ResultSet` obtenido.
+            * Construir un `XChartPanel` a partir del objeto `Chart` devuelto por `generate_chart`.
+            * Mostrar el gráfico en una nueva ventana.
+        * Maneja errores durante la ejecución SQL y la generación del gráfico.
+    * **Dependencias:** `processor`, `utils`, `javax.swing.*`, `java.awt.*`, `java.io.*`, `javax.json.*`, `org.knowm.xchart.*` (se asume que las JARs de XChart están en el classpath).
+
+8.  **`utils.py`**:
+    * **Propósito:** Contiene funciones de utilidad genéricas.
+    * **Funciones:**
+        * `getDDL()`: Placeholder para la función que devuelve el DDL de las tablas. (Debe ser implementada externamente).
+        * `executeSQL(sql)`: Placeholder para la función que ejecuta SQL y devuelve un `java.sql.ResultSet`. (Debe ser implementada externamente).
+        * `showPanel(panel, title)`: Muestra un `JPanel` en un `JFrame` no modal, ajustando el tamaño según el `preferredSize` del panel.
+    * **Dependencias:** `javax.swing.*`, `java.awt.*`.
+
+9.  **`config.py`**:
+    * **Propósito:** Almacena la configuración de la aplicación.
+    * **Variables:**
+        * `API_KEY`: Clave de la API de Gemini.
+        * `GEMINI_MODEL`: Nombre del modelo de Gemini a usar.
+        * `BASE_INITIAL_PROMPT`: Plantilla base para el prompt inicial que se envía a la IA.
+    * **Dependencias:** Ninguna.
+
+10. **`chatpanel.xml.txt`**:
+    * **Propósito:** Archivo de definición del diseño de la interfaz de usuario del chat en formato XML, generado por Abeille Form Designer.
+    * **Uso:** Cargado dinámicamente por `chat_panel.py`.
+
+Mecanismo de Procesadores:
+
+La aplicación utiliza un patrón de diseño "Strategy" o "Plugin" para manejar los diferentes tipos de respuesta de la IA.
+
+* **`Processor` Abstracto:** Define una interfaz común para todos los tipos de procesamiento. Esto permite que el `ChatPanel` interactúe con cualquier procesador sin conocer sus detalles internos.
+* **Procesadores Concretos:** Cada tipo de respuesta (texto, SQL, gráfico) tiene su propia implementación de `Processor` (`TextProcessor`, `SqlProcessor`, `ChartProcessor`).
+* **Registro:** En `main.py`, las instancias de estos procesadores concretos se crean y se registran en el `ChatPanel` utilizando el método `register_processor()`. El `ChatPanel` los almacena en un diccionario usando `get_type()` como clave.
+* **Composición del Prompt Inicial:** Al inicio de la conversación, el `ChatPanel` construye el prompt inicial completo (`_build_initial_prompt_string`) que se enviará a Gemini. Cada procesador contribuye con su descripción (`get_description()`) y la información detallada de su formato de respuesta (`get_initial_prompt_info()`). Esto hace que el sistema sea extensible; añadir un nuevo tipo de procesador solo requiere crear una nueva clase que extienda `Processor` y registrarla en `main.py`.
+* **Despacho de Respuestas:** Cuando el `ChatPanel` recibe una respuesta JSON de Gemini, extrae el campo `type` y busca el procesador correspondiente en su diccionario de procesadores registrados. Luego, llama al método `process_response()` de ese procesador para manejar la respuesta.
+
+Notas para el Desarrollador:
+
+* **Jython 2.7.1 y Java 1.8:** Asegúrate de que todas las dependencias (librerías Java como XChart, Abeille, Apache Commons) sean compatibles con Java 1.8. Evita las características de Python 3.x.
+* **`javax.json`:** Se utiliza para el manejo de JSON. Asegúrate de que `javax.json-1.1.4.jar` (o una versión compatible) esté en el classpath.
+* **`SwingWorker`:** Es fundamental para mantener la UI responsiva. Todas las operaciones de red (llamadas a la API de Gemini) y operaciones de base de datos (ejecución de SQL) se realizan dentro de `doInBackground()` de un `SwingWorker`. Las actualizaciones de la UI siempre se realizan en `done()` o utilizando `SwingUtilities.invokeLater()`.
+* **Placeholders:** Las funciones `getDDL()` y `executeSQL()` en `utils.py` son placeholders. Debes implementar la lógica real de conexión a la base de datos y ejecución de consultas en ellas.
+* **API Key:** Recuerda reemplazar `"TU_API_KEY_AQUI"` en `config.py` con tu clave real de la API de Gemini.
+* **Manejo de Errores:** Se han incluido bloques `try-except` para capturar excepciones y notificar al usuario en la UI o imprimir en la consola.
+* **Extensibilidad:** El diseño basado en procesadores facilita la adición de nuevos tipos de interacción con la IA sin modificar el código central del chat.
